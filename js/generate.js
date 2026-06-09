@@ -134,7 +134,7 @@ async function handleGenerate() {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model, max_tokens: 4096, messages: [{ role: 'user', content: msgContent }] })
+        body: JSON.stringify({ model, max_completion_tokens: 4096, messages: [{ role: 'user', content: msgContent }] })
       });
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
