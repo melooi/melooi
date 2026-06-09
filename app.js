@@ -47,10 +47,12 @@ function init() {
   });
 
   saveSettings.addEventListener('click', () => {
-    localStorage.setItem(`pc_api_key_${currentProvider}`, apiKeyInput.value.trim());
+    const key = apiKeyInput.value.trim();
+    localStorage.setItem(`pc_api_key_${currentProvider}`, key);
     localStorage.setItem(`pc_model_${currentProvider}`, modelSelect.value);
     settingsPanel.classList.add('hidden');
     showToast('✓', 'تنظیمات ذخیره شد');
+    testApiKey(key, currentProvider);
   });
 
   toggleApiKey.addEventListener('click', () => {
@@ -138,12 +140,61 @@ function setProvider(p) {
   ).join('');
   const savedModel = localStorage.getItem(`pc_model_${p}`) || def.defaultModel;
   modelSelect.value = savedModel;
+
+  // update lamp for this provider
+  const existingKey = localStorage.getItem(`pc_api_key_${p}`);
+  if (existingKey) testApiKey(existingKey, p);
+  else setLamp('idle');
 }
 
 /* ─── SETTINGS ─── */
 function loadSettings() {
   const provider = localStorage.getItem('pc_provider') || 'claude';
   setProvider(provider);
+  const saved = localStorage.getItem(`pc_api_key_${provider}`);
+  if (saved) testApiKey(saved, provider);
+}
+
+/* ─── API KEY TEST ─── */
+function setLamp(state) {
+  const lamp    = document.getElementById('apiLamp');
+  const topLamp = document.getElementById('topBarLamp');
+  [lamp, topLamp].forEach(el => {
+    if (!el) return;
+    el.className = `api-lamp ${state}`;
+    el.title = { idle:'کلیدی وارد نشده', testing:'در حال بررسی...', ok:'کلید معتبر است', error:'کلید نامعتبر یا خطا' }[state] || '';
+  });
+}
+
+async function testApiKey(key, provider) {
+  if (!key) { setLamp('idle'); return; }
+  setLamp('testing');
+  try {
+    if (provider === 'openai') {
+      const r = await fetch('https://api.openai.com/v1/models', {
+        headers: { 'Authorization': `Bearer ${key}` }
+      });
+      setLamp(r.ok ? 'ok' : 'error');
+    } else {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5',
+          max_tokens: 1,
+          messages: [{ role: 'user', content: 'hi' }]
+        })
+      });
+      setLamp(r.ok ? 'ok' : 'error');
+    }
+  } catch {
+    setLamp('error');
+  }
 }
 
 /* ─── FIELD TYPES ─── */
