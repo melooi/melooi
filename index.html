@@ -99,10 +99,16 @@
 
       <!-- Google Custom Search -->
       <div class="pt-4" style="border-top:1px solid var(--md-outline-var)">
-        <label class="block text-xs font-medium mb-2.5" style="color:var(--md-on-surface-var)">
-          Google Custom Search
-          <span class="mr-1.5 text-[10px] px-1.5 py-0.5 rounded-full" style="background:color-mix(in srgb,var(--md-primary) 12%,transparent);color:var(--md-primary)">اختیاری</span>
-        </label>
+        <div class="flex items-start justify-between gap-3 mb-2.5">
+          <label class="text-xs font-medium" style="color:var(--md-on-surface-var)">
+            Google Custom Search
+            <span class="mr-1.5 text-[10px] px-1.5 py-0.5 rounded-full" style="background:color-mix(in srgb,var(--md-primary) 12%,transparent);color:var(--md-primary)">اختیاری</span>
+          </label>
+          <p class="text-[11px] text-left leading-relaxed flex-shrink-0" style="color:var(--md-outline);max-width:200px">
+            برای تحلیل رقبا، Google API Key و CX لازم است.<br>
+            بدون این بخش هم تولید محتوا انجام می‌شود.
+          </p>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs mb-1.5" style="color:var(--md-on-surface-var)">Google API Key</label>
