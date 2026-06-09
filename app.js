@@ -117,7 +117,7 @@ const PROVIDERS = {
       { value: 'o1',              label: 'o1' },
       { value: 'o1-mini',         label: 'o1 Mini' },
     ],
-    defaultModel: 'gpt-5.5'
+    defaultModel: 'gpt-5.4-mini'
   }
 };
 
