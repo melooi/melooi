@@ -168,13 +168,18 @@ function loadSettings() {
 
 /* ─── API KEY TEST ─── */
 function setLamp(state) {
-  const lamp    = document.getElementById('apiLamp');
-  const topLamp = document.getElementById('topBarLamp');
-  [lamp, topLamp].forEach(el => {
-    if (!el) return;
-    el.className = `api-lamp ${state}`;
-    el.title = { idle:'کلیدی وارد نشده', testing:'در حال بررسی...', ok:'کلید معتبر است', error:'کلید نامعتبر یا خطا' }[state] || '';
-  });
+  const lamp = document.getElementById('apiLamp');
+  const btn  = document.getElementById('settingsBtn');
+  if (lamp) {
+    lamp.className = `api-lamp ${state}`;
+    lamp.title = { idle:'کلیدی وارد نشده', testing:'در حال بررسی...', ok:'کلید معتبر است', error:'کلید نامعتبر یا خطا' }[state] || '';
+  }
+  if (btn) {
+    btn.classList.remove('btn-glow-ok', 'btn-glow-error', 'btn-glow-testing');
+    if (state === 'ok')           btn.classList.add('btn-glow-ok');
+    else if (state === 'error')   btn.classList.add('btn-glow-error');
+    else if (state === 'testing') btn.classList.add('btn-glow-testing');
+  }
 }
 
 async function testApiKey(key, provider) {
