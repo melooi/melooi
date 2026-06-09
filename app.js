@@ -33,9 +33,9 @@ const regenerateBtn   = document.getElementById('regenerateBtn');
 const outputMeta      = document.getElementById('outputMeta');
 const outputTime      = document.getElementById('outputTime');
 
-const toast           = document.getElementById('toast');
-const toastIcon       = document.getElementById('toastIcon');
-const toastMsg        = document.getElementById('toastMsg');
+const snackbar        = document.getElementById('snackbar');
+const snackIcon       = document.getElementById('snackIcon');
+const snackMsg        = document.getElementById('snackMsg');
 
 /* ─── INIT ─── */
 function init() {
@@ -548,15 +548,28 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;');
 }
 
-/* ─── TOAST ─── */
-let toastTimer = null;
+/* ─── SNACKBAR (MD3) ─── */
+let snackTimer = null;
 function showToast(icon, message) {
-  toastIcon.textContent = icon;
-  toastMsg.textContent  = message;
-  toast.classList.remove('hidden');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.add('hidden'), 3000);
+  snackIcon.textContent = icon;
+  snackMsg.textContent  = message;
+  snackbar.classList.add('show');
+  clearTimeout(snackTimer);
+  snackTimer = setTimeout(() => snackbar.classList.remove('show'), 3000);
 }
+
+/* ─── RIPPLE (MD3) ─── */
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('.ripple-container');
+  if (!el) return;
+  const r = document.createElement('span');
+  r.className = 'ripple';
+  const rect = el.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size/2}px;top:${e.clientY - rect.top - size/2}px`;
+  el.appendChild(r);
+  r.addEventListener('animationend', () => r.remove());
+});
 
 /* ─── BOOT ─── */
 init();
