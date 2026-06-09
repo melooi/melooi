@@ -47,8 +47,8 @@ function init() {
   });
 
   saveSettings.addEventListener('click', () => {
-    localStorage.setItem('pc_api_key', apiKeyInput.value.trim());
-    localStorage.setItem('pc_model', modelSelect.value);
+    localStorage.setItem(`pc_api_key_${currentProvider}`, apiKeyInput.value.trim());
+    localStorage.setItem(`pc_model_${currentProvider}`, modelSelect.value);
     settingsPanel.classList.add('hidden');
     showToast('✓', 'تنظیمات ذخیره شد');
   });
@@ -72,19 +72,76 @@ function init() {
     });
   });
 
-  document.querySelectorAll('.content-type-tag').forEach(btn => {
+  document.querySelectorAll('.md-chip').forEach(btn => {
     btn.addEventListener('click', () => {
       btn.classList.toggle('active');
     });
   });
 }
 
+/* ─── PROVIDER ─── */
+const PROVIDERS = {
+  claude: {
+    label: 'Claude (Anthropic)',
+    keyPlaceholder: 'sk-ant-api03-...',
+    keyLabel: 'کلید API آنتروپیک',
+    models: [
+      { value: 'claude-opus-4-8',   label: 'Claude Opus 4.8' },
+      { value: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6' },
+      { value: 'claude-haiku-4-5',  label: 'Claude Haiku 4.5' },
+    ],
+    defaultModel: 'claude-sonnet-4-6'
+  },
+  openai: {
+    label: 'GPT (OpenAI)',
+    keyPlaceholder: 'sk-...',
+    keyLabel: 'کلید API اوپن‌ای',
+    models: [
+      { value: 'gpt-4o',       label: 'GPT-4o' },
+      { value: 'gpt-4o-mini',  label: 'GPT-4o Mini' },
+      { value: 'gpt-4-turbo',  label: 'GPT-4 Turbo' },
+      { value: 'o1-mini',      label: 'o1 Mini' },
+    ],
+    defaultModel: 'gpt-4o'
+  }
+};
+
+let currentProvider = 'claude';
+
+function setProvider(p) {
+  currentProvider = p;
+  localStorage.setItem('pc_provider', p);
+  const def = PROVIDERS[p];
+
+  // update button styles
+  const btnClaude = document.getElementById('providerClaude');
+  const btnGpt    = document.getElementById('providerGpt');
+  const active    = 'border-color:var(--md-primary);background:color-mix(in srgb,var(--md-primary) 15%,transparent);color:var(--md-primary)';
+  const inactive  = 'border-color:var(--md-outline);background:transparent;color:var(--md-on-surface-var)';
+  btnClaude.style.cssText = (p === 'claude' ? active : inactive);
+  btnGpt.style.cssText    = (p === 'openai' ? active : inactive);
+
+  // update label & placeholder
+  document.getElementById('apiKeyLabel').textContent = def.keyLabel;
+  apiKeyInput.placeholder = def.keyPlaceholder;
+
+  // load saved key for this provider
+  const savedKey = localStorage.getItem(`pc_api_key_${p}`) || '';
+  apiKeyInput.value = savedKey;
+  document.getElementById('apiFieldWrap').classList.toggle('has-value', savedKey.length > 0);
+
+  // rebuild model select
+  modelSelect.innerHTML = def.models.map(m =>
+    `<option value="${m.value}">${m.label}</option>`
+  ).join('');
+  const savedModel = localStorage.getItem(`pc_model_${p}`) || def.defaultModel;
+  modelSelect.value = savedModel;
+}
+
 /* ─── SETTINGS ─── */
 function loadSettings() {
-  const key   = localStorage.getItem('pc_api_key') || '';
-  const model = localStorage.getItem('pc_model') || 'claude-sonnet-4-6';
-  apiKeyInput.value = key;
-  modelSelect.value = model;
+  const provider = localStorage.getItem('pc_provider') || 'claude';
+  setProvider(provider);
 }
 
 /* ─── FIELD TYPES ─── */
@@ -352,8 +409,23 @@ ${langInstr}
 
 /* ─── BUILD MESSAGE CONTENT ─── */
 function buildMessageContent(inputs, prompt) {
-  const content = [];
+  if (currentProvider === 'openai') {
+    const content = [];
+    inputs.forEach(inp => {
+      if (inp.type === 'image') {
+        content.push({
+          type: 'image_url',
+          image_url: { url: `data:${inp.mediaType};base64,${inp.base64}` }
+        });
+      }
+      // OpenAI doesn't natively accept PDF — skip (text already included in prompt)
+    });
+    content.push({ type: 'text', text: prompt });
+    return content;
+  }
 
+  // Claude (Anthropic)
+  const content = [];
   inputs.forEach(inp => {
     if (inp.type === 'image') {
       content.push({
@@ -367,7 +439,6 @@ function buildMessageContent(inputs, prompt) {
       });
     }
   });
-
   content.push({ type: 'text', text: prompt });
   return content;
 }
@@ -376,7 +447,7 @@ function buildMessageContent(inputs, prompt) {
 async function handleGenerate() {
   if (isGenerating) return;
 
-  const apiKey = localStorage.getItem('pc_api_key') || apiKeyInput.value.trim();
+  const apiKey = localStorage.getItem(`pc_api_key_${currentProvider}`) || apiKeyInput.value.trim();
   if (!apiKey) {
     settingsPanel.classList.remove('hidden');
     apiKeyInput.focus();
@@ -390,7 +461,7 @@ async function handleGenerate() {
     return;
   }
 
-  const contentTypes = [...document.querySelectorAll('.content-type-tag.active')].map(el => el.dataset.value);
+  const contentTypes = [...document.querySelectorAll('.md-chip.active')].map(el => el.dataset.value);
   if (!contentTypes.length) {
     showToast('⚠', 'حداقل یک نوع محتوا انتخاب کنید');
     return;
@@ -398,51 +469,71 @@ async function handleGenerate() {
 
   const tone     = toneSelect.value;
   const language = languageSelect.value;
-  const model    = localStorage.getItem('pc_model') || modelSelect.value || 'claude-sonnet-4-6';
+  const model    = localStorage.getItem(`pc_model_${currentProvider}`) || modelSelect.value;
 
   setGenerating(true);
   showState('loading');
   const startTime = Date.now();
 
   try {
-    const prompt  = buildPrompt(inputs, tone, language, contentTypes);
+    const prompt     = buildPrompt(inputs, tone, language, contentTypes);
     const msgContent = buildMessageContent(inputs, prompt);
 
-    setLoadingStep('در حال ارسال به Claude...');
+    setLoadingStep(`در حال ارسال به ${currentProvider === 'openai' ? 'OpenAI' : 'Claude'}...`);
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 4096,
-        messages: [{ role: 'user', content: msgContent }]
-      })
-    });
+    let raw = '';
 
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      const msg = err.error?.message || `خطای API (${response.status})`;
-      throw new Error(msg);
+    if (currentProvider === 'openai') {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: 4096,
+          messages: [{ role: 'user', content: msgContent }]
+        })
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error?.message || `خطای API (${response.status})`);
+      }
+      const data = await response.json();
+      raw = data.choices?.[0]?.message?.content || '';
+    } else {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: 4096,
+          messages: [{ role: 'user', content: msgContent }]
+        })
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error?.message || `خطای API (${response.status})`);
+      }
+      const data = await response.json();
+      raw = data.content?.[0]?.text || '';
     }
-
-    setLoadingStep('در حال پردازش پاسخ...');
-    const data = await response.json();
-    const raw  = data.content?.[0]?.text || '';
 
     if (!raw) throw new Error('پاسخ خالی از سرور');
 
+    setLoadingStep('در حال پردازش پاسخ...');
     lastRawOutput = raw;
     contentOutput.innerHTML = renderMarkdown(raw);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-    const modelShort = model.replace('claude-', '').replace('-', ' ');
-    outputMeta.textContent = `تولید شده با Claude ${modelShort}`;
+    const providerLabel = currentProvider === 'openai' ? `GPT — ${model}` : `Claude — ${model.replace('claude-', '')}`;
+    outputMeta.textContent = `تولید شده با ${providerLabel}`;
     outputTime.textContent = `${elapsed} ثانیه`;
 
     showState('content');

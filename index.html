@@ -317,10 +317,28 @@
 
   <!-- ═══ SETTINGS PANEL ═══ -->
   <div id="settingsPanel" class="hidden" style="background:color-mix(in srgb,var(--md-primary) 5%,var(--md-surface));border-bottom:1px solid var(--md-outline-var)">
-    <div class="max-w-5xl mx-auto px-4 py-5">
+    <div class="max-w-5xl mx-auto px-4 py-5 flex flex-col gap-4">
+
+      <!-- Provider Selector -->
+      <div>
+        <label class="block text-xs font-medium mb-2" style="color:var(--md-on-surface-var)">ارائه‌دهنده هوش مصنوعی</label>
+        <div class="flex gap-2">
+          <button id="providerClaude" onclick="setProvider('claude')"
+            class="md-state ripple-container flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition-all"
+            style="border-color:var(--md-primary);background:color-mix(in srgb,var(--md-primary) 15%,transparent);color:var(--md-primary)">
+            <span>🤖</span> Claude (Anthropic)
+          </button>
+          <button id="providerGpt" onclick="setProvider('openai')"
+            class="md-state ripple-container flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition-all"
+            style="border-color:var(--md-outline);background:transparent;color:var(--md-on-surface-var)">
+            <span>✨</span> GPT (OpenAI)
+          </button>
+        </div>
+      </div>
+
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
         <div class="sm:col-span-2">
-          <label class="block text-xs font-medium mb-1.5" style="color:var(--md-on-surface-var)">کلید API آنتروپیک (Claude)</label>
+          <label id="apiKeyLabel" class="block text-xs font-medium mb-1.5" style="color:var(--md-on-surface-var)">کلید API آنتروپیک</label>
           <div class="md-field" id="apiFieldWrap">
             <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..."
               class="ltr-input" style="direction:ltr;padding:12px 44px 12px 16px"
@@ -353,6 +371,7 @@
           </button>
         </div>
       </div>
+
     </div>
   </div>
 
