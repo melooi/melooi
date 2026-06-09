@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Content — تولید محتوای محصول</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Vazirmatn', 'Tahoma', sans-serif; }
+    .ltr-input { direction: ltr; }
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .fade-in { animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Rendered Markdown Styles */
+    .content-output h1 { font-size: 1.125rem; font-weight: 700; color: #f9fafb; margin: 1.5rem 0 0.5rem 0; }
+    .content-output h2 { font-size: 1rem; font-weight: 700; color: #e5e7eb; margin: 1.25rem 0 0.375rem 0; padding-bottom: 0.5rem; border-bottom: 1px solid #374151; }
+    .content-output h3 { font-size: 0.875rem; font-weight: 600; color: #a78bfa; margin: 0.875rem 0 0.25rem 0; }
+    .content-output p { font-size: 0.875rem; color: #d1d5db; line-height: 1.75; margin: 0.5rem 0; }
+    .content-output ul, .content-output ol { margin: 0.5rem 0; padding: 0; list-style: none; }
+    .content-output li { font-size: 0.875rem; color: #d1d5db; line-height: 1.65; padding: 0.15rem 0; display: flex; align-items: flex-start; gap: 0.5rem; }
+    .content-output li::before { content: '›'; color: #7c3aed; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+    .content-output strong { color: #f3f4f6; font-weight: 600; }
+    .content-output em { color: #9ca3af; font-style: italic; }
+    .content-output code { background: #1f2937; color: #a78bfa; padding: 0.1rem 0.35rem; border-radius: 0.25rem; font-size: 0.78rem; font-family: monospace; direction: ltr; display: inline-block; }
+    .content-output pre { background: #111827; border-radius: 0.5rem; padding: 1rem; overflow-x: auto; margin: 0.75rem 0; }
+    .content-output pre code { background: none; color: #6ee7b7; padding: 0; }
+    .content-output blockquote { border-right: 3px solid #7c3aed; padding-right: 0.75rem; color: #9ca3af; font-style: italic; margin: 0.75rem 0; font-size: 0.875rem; }
+    .content-output hr { border-color: #374151; margin: 1rem 0; }
+    .content-output a { color: #818cf8; text-decoration: underline; }
+
+    /* Upload area */
+    .upload-zone { cursor: pointer; }
+    .upload-zone.drag-over { border-color: #7c3aed !important; background: rgba(124, 58, 237, 0.05); }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
+    ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+  <!-- ═══════════════ HEADER ═══════════════ -->
+  <header class="sticky top-0 z-50 bg-gray-900/95 backdrop-blur border-b border-gray-800">
+    <div class="max-w-6xl mx-auto px-5 py-3.5 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-violet-900/40">
+          <svg class="w-4.5 h-4.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-white leading-none">Product Content</h1>
+          <p class="text-[11px] text-gray-500 mt-0.5">تولید محتوای محصول با هوش مصنوعی</p>
+        </div>
+      </div>
+      <button id="settingsBtn" title="تنظیمات" class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-xs px-3 py-1.5 rounded-lg hover:bg-gray-800">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        تنظیمات API
+      </button>
+    </div>
+  </header>
+
+  <!-- ═══════════════ SETTINGS PANEL ═══════════════ -->
+  <div id="settingsPanel" class="hidden border-b border-gray-800 bg-gray-900">
+    <div class="max-w-6xl mx-auto px-5 py-4">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-medium text-gray-400 mb-1.5">کلید API آنتروپیک (Claude)</label>
+          <div class="relative">
+            <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..."
+              class="ltr-input w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/40 transition pr-10">
+            <button id="toggleApiKey" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors">
+              <svg id="eyeShow" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+              </svg>
+              <svg id="eyeHide" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+          </div>
+          <p class="text-[11px] text-gray-600 mt-1">کلید API در مرورگر شما ذخیره می‌شود و جایی ارسال نمی‌شود.</p>
+        </div>
+        <div class="flex items-end gap-3">
+          <div class="flex-1">
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">مدل</label>
+            <select id="modelSelect" class="ltr-input w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-violet-500 transition">
+              <option value="claude-opus-4-8">Claude Opus 4.8</option>
+              <option value="claude-sonnet-4-6" selected>Claude Sonnet 4.6</option>
+              <option value="claude-haiku-4-5">Claude Haiku 4.5</option>
+            </select>
+          </div>
+          <button id="saveSettings" class="bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">
+            ذخیره
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ MAIN LAYOUT ═══════════════ -->
+  <main class="max-w-6xl mx-auto px-5 py-7">
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-7">
+
+      <!-- ─── LEFT: INPUTS ─── -->
+      <div class="space-y-5">
+        <div>
+          <h2 class="text-lg font-semibold text-white">اطلاعات محصول</h2>
+          <p class="text-sm text-gray-500 mt-0.5">متن، تصویر، لینک یا فایل PDF محصول را وارد کنید</p>
+        </div>
+
+        <!-- Fields Container -->
+        <div id="fieldsContainer" class="space-y-3">
+          <!-- Initial text field rendered here -->
+        </div>
+
+        <!-- Add Field Button -->
+        <button id="addFieldBtn"
+          class="w-full border border-dashed border-gray-700 hover:border-violet-500/60 rounded-xl py-3 px-4 text-sm text-gray-500 hover:text-violet-400 transition-all duration-200 flex items-center justify-center gap-2 group">
+          <svg class="w-4 h-4 group-hover:rotate-90 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+          </svg>
+          افزودن فیلد جدید
+        </button>
+
+        <!-- Content Settings Card -->
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-4">
+          <h3 class="text-sm font-semibold text-gray-300 flex items-center gap-2">
+            <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+            </svg>
+            تنظیمات محتوا
+          </h3>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs text-gray-400 mb-1.5">لحن نوشتار</label>
+              <select id="toneSelect" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-violet-500 transition">
+                <option value="promotional">📢 تبلیغاتی</option>
+                <option value="formal">🎩 رسمی</option>
+                <option value="casual">😊 دوستانه</option>
+                <option value="technical">⚙️ فنی و تخصصی</option>
+                <option value="storytelling">✨ داستانی</option>
+                <option value="informational">📋 اطلاع‌رسانی</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs text-gray-400 mb-1.5">زبان خروجی</label>
+              <select id="languageSelect" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-violet-500 transition">
+                <option value="fa">🇮🇷 فارسی</option>
+                <option value="en">🇬🇧 English</option>
+                <option value="both">🌐 هر دو</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs text-gray-400 mb-2">نوع محتوای تولیدی <span class="text-gray-600">(چند گزینه)</span></label>
+            <div id="contentTypesContainer" class="flex flex-wrap gap-2">
+              <button class="content-type-tag active" data-value="description">توضیحات محصول</button>
+              <button class="content-type-tag" data-value="features">ویژگی‌های کلیدی</button>
+              <button class="content-type-tag" data-value="social">پست شبکه اجتماعی</button>
+              <button class="content-type-tag" data-value="seo">متا SEO</button>
+              <button class="content-type-tag" data-value="tagline">تگ‌لاین</button>
+              <button class="content-type-tag" data-value="faq">سوالات متداول</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Generate Button -->
+        <button id="generateBtn"
+          class="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 active:from-violet-700 active:to-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2.5 shadow-lg shadow-violet-900/30">
+          <svg id="genIcon" class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          <span id="genText">تولید محتوا</span>
+        </button>
+      </div>
+
+      <!-- ─── RIGHT: OUTPUT ─── -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between h-7">
+          <h2 class="text-lg font-semibold text-white">محتوای تولید شده</h2>
+          <div id="outputActions" class="hidden flex items-center gap-2">
+            <button id="copyBtn" class="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              </svg>
+              کپی
+            </button>
+            <button id="regenerateBtn" class="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              مجدداً
+            </button>
+          </div>
+        </div>
+
+        <!-- Output Box -->
+        <div id="outputBox" class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden min-h-[520px] flex flex-col">
+
+          <!-- Empty State -->
+          <div id="emptyState" class="flex-1 flex flex-col items-center justify-center p-10 text-center">
+            <div class="w-14 h-14 bg-gray-800 rounded-2xl flex items-center justify-center mb-4">
+              <svg class="w-7 h-7 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </div>
+            <p class="text-sm text-gray-400 font-medium">هنوز محتوایی تولید نشده</p>
+            <p class="text-xs text-gray-600 mt-1.5 max-w-[220px]">اطلاعات محصول را وارد کنید و دکمه «تولید محتوا» را بزنید</p>
+          </div>
+
+          <!-- Loading State -->
+          <div id="loadingState" class="hidden flex-1 flex flex-col items-center justify-center p-10 text-center">
+            <div class="relative w-12 h-12 mb-5">
+              <div class="absolute inset-0 border-2 border-gray-700 rounded-full"></div>
+              <svg class="w-12 h-12 spin absolute inset-0" viewBox="0 0 48 48" fill="none">
+                <circle cx="24" cy="24" r="20" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="90 40"/>
+              </svg>
+            </div>
+            <p class="text-sm text-gray-300 font-medium">در حال تحلیل و تولید محتوا...</p>
+            <p class="text-xs text-gray-500 mt-1.5" id="loadingStep">اطلاعات برای Claude ارسال شد</p>
+          </div>
+
+          <!-- Content State -->
+          <div id="contentState" class="hidden flex-1 flex flex-col">
+            <div id="contentOutput" class="flex-1 p-5 overflow-y-auto content-output fade-in"></div>
+            <div class="px-5 py-3 border-t border-gray-800 flex items-center justify-between text-[11px] text-gray-600">
+              <span id="outputMeta">تولید شده با کلود</span>
+              <span id="outputTime"></span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ═══════════════ TOAST ═══════════════ -->
+  <div id="toast" class="fixed bottom-6 right-1/2 translate-x-1/2 hidden z-50">
+    <div class="bg-gray-800 border border-gray-700 text-white text-sm px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2.5 min-w-[180px]">
+      <span id="toastIcon" class="text-base">✓</span>
+      <span id="toastMsg">پیام</span>
+    </div>
+  </div>
+
+  <!-- Inline styles for content-type tags (Tailwind can't handle dynamic active class) -->
+  <style>
+    .content-type-tag {
+      padding: 0.3rem 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.75rem;
+      border: 1px solid #374151;
+      color: #9ca3af;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      background: transparent;
+    }
+    .content-type-tag:hover {
+      border-color: #7c3aed;
+      color: #a78bfa;
+    }
+    .content-type-tag.active {
+      border-color: #7c3aed;
+      background: rgba(124, 58, 237, 0.15);
+      color: #c4b5fd;
+    }
+  </style>
+
+  <script src="app.js"></script>
+</body>
+</html>
