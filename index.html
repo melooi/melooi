@@ -393,6 +393,33 @@
         </div>
       </div>
 
+      <!-- Google Custom Search -->
+      <div class="pt-4" style="border-top:1px solid var(--md-outline-var)">
+        <label class="block text-xs font-medium mb-2.5" style="color:var(--md-on-surface-var)">
+          Google Custom Search
+          <span class="mr-1.5 text-[10px] px-1.5 py-0.5 rounded-full" style="background:color-mix(in srgb,var(--md-primary) 12%,transparent);color:var(--md-primary)">اختیاری</span>
+        </label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs mb-1.5" style="color:var(--md-on-surface-var)">Google API Key</label>
+            <div class="md-field" id="googleKeyWrap">
+              <input type="password" id="googleApiKeyInput" placeholder="AIzaSy..."
+                class="ltr-input" style="direction:ltr;padding:12px 16px"
+                oninput="document.getElementById('googleKeyWrap').classList.toggle('has-value',this.value.length>0)">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs mb-1.5" style="color:var(--md-on-surface-var)">Search Engine ID (CX)</label>
+            <div class="md-field" id="googleCxWrap">
+              <input type="text" id="googleCxInput" placeholder="a1b2c3d4:xxx..."
+                class="ltr-input" style="direction:ltr;padding:12px 16px"
+                oninput="document.getElementById('googleCxWrap').classList.toggle('has-value',this.value.length>0)">
+            </div>
+          </div>
+        </div>
+        <p class="text-xs mt-1.5" style="color:var(--md-outline)">رایگان تا ۱۰۰ جستجو در روز — کلید را از Google Cloud Console دریافت کنید.</p>
+      </div>
+
     </div>
   </div>
 
@@ -419,6 +446,69 @@
           </svg>
           افزودن فیلد جدید
         </button>
+
+        <!-- SERP Analysis -->
+        <div class="md-card p-4 flex flex-col gap-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-semibold flex items-center gap-2" style="color:var(--md-on-surface)">
+              <svg class="w-4 h-4" style="color:var(--md-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+              تحلیل رقبا
+            </h3>
+            <span id="serpLamp" class="api-lamp idle" title="وضعیت جستجو"></span>
+          </div>
+
+          <div class="flex gap-2">
+            <div class="md-field flex-1" id="serpQueryWrap">
+              <input type="text" id="serpQueryInput" placeholder="عنوان محصول یا کلیدواژه..."
+                style="padding:10px 16px"
+                oninput="document.getElementById('serpQueryWrap').classList.toggle('has-value',this.value.length>0)">
+            </div>
+            <button id="serpSearchBtn" class="md-btn-tonal md-state ripple-container text-sm px-4" style="height:46px;border-radius:var(--md-shape-md)">
+              جستجو
+            </button>
+          </div>
+
+          <p id="serpHint" class="text-xs" style="color:var(--md-outline)">کلید Google را در تنظیمات وارد کنید.</p>
+
+          <!-- Intent chips -->
+          <div id="intentSection" class="hidden flex flex-col gap-2">
+            <label class="text-xs font-medium flex items-center gap-1.5" style="color:var(--md-on-surface-var)">
+              اینتنت کاربر
+              <span id="intentBadge" class="hidden text-[10px] px-1.5 py-0.5 rounded-full" style="background:color-mix(in srgb,var(--md-primary) 15%,transparent);color:var(--md-primary)">تشخیص اتوماتیک</span>
+            </label>
+            <div class="flex flex-wrap gap-2" id="intentChips">
+              <button class="md-chip ripple-container" data-intent="informational">
+                <svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                اطلاعاتی
+              </button>
+              <button class="md-chip ripple-container" data-intent="commercial">
+                <svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                تجاری / مقایسه‌ای
+              </button>
+              <button class="md-chip ripple-container" data-intent="transactional">
+                <svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                تراکنشی
+              </button>
+              <button class="md-chip ripple-container" data-intent="navigational">
+                <svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                ناوبری
+              </button>
+            </div>
+          </div>
+
+          <!-- SERP titles list -->
+          <div id="serpResultsWrap" class="hidden">
+            <button id="serpToggleBtn" class="text-xs flex items-center gap-1" style="color:var(--md-primary);background:none;border:none;cursor:pointer;padding:0">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+              </svg>
+              <span id="serpToggleLabel">نمایش عناوین برتر</span>
+            </button>
+            <div id="serpList" class="hidden mt-2 flex flex-col gap-1 overflow-y-auto" style="max-height:200px"></div>
+          </div>
+        </div>
 
         <!-- Content Settings -->
         <div class="md-card p-4 flex flex-col gap-4">

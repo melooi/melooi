@@ -2,6 +2,8 @@
 let fieldCounter = 0;
 let lastRawOutput = '';
 let isGenerating = false;
+let serpData = [];
+let selectedIntent = '';
 
 /* ─── DOM REFS ─── */
 const fieldsContainer = document.getElementById('fieldsContainer');
@@ -50,9 +52,14 @@ function init() {
     const key = apiKeyInput.value.trim();
     localStorage.setItem(`pc_api_key_${currentProvider}`, key);
     localStorage.setItem(`pc_model_${currentProvider}`, modelSelect.value);
+    const gKey = document.getElementById('googleApiKeyInput').value.trim();
+    const gCx  = document.getElementById('googleCxInput').value.trim();
+    if (gKey) localStorage.setItem('pc_google_key', gKey);
+    if (gCx)  localStorage.setItem('pc_google_cx',  gCx);
     settingsPanel.classList.add('hidden');
     showToast('✓', 'تنظیمات ذخیره شد');
     testApiKey(key, currentProvider);
+    updateSerpHint();
   });
 
   toggleApiKey.addEventListener('click', () => {
@@ -74,9 +81,36 @@ function init() {
     });
   });
 
-  document.querySelectorAll('.md-chip').forEach(btn => {
+  document.querySelectorAll('#contentTypesContainer .md-chip').forEach(btn => {
+    btn.addEventListener('click', () => btn.classList.toggle('active'));
+  });
+
+  document.getElementById('serpSearchBtn').addEventListener('click', () => {
+    const q = document.getElementById('serpQueryInput').value.trim();
+    if (q) searchGoogle(q);
+    else showToast('⚠', 'یک کلیدواژه وارد کنید');
+  });
+
+  document.getElementById('serpQueryInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const q = e.target.value.trim();
+      if (q) searchGoogle(q);
+    }
+  });
+
+  document.getElementById('serpToggleBtn').addEventListener('click', () => {
+    const list  = document.getElementById('serpList');
+    const label = document.getElementById('serpToggleLabel');
+    const shown = !list.classList.contains('hidden');
+    list.classList.toggle('hidden', shown);
+    label.textContent = shown ? 'نمایش عناوین برتر' : 'بستن عناوین';
+  });
+
+  document.querySelectorAll('#intentChips .md-chip').forEach(btn => {
     btn.addEventListener('click', () => {
-      btn.classList.toggle('active');
+      document.querySelectorAll('#intentChips .md-chip').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedIntent = btn.dataset.intent;
     });
   });
 }
@@ -137,7 +171,7 @@ function setProvider(p) {
   btnGpt.style.cssText    = (p === 'openai' ? active : inactive);
 
   // update label & placeholder
-  document.getElementById('apiKeyLabel').textContent = def.keyLabel;
+  document.getElementById('apiKeyLabelText').textContent = def.keyLabel;
   apiKeyInput.placeholder = def.keyPlaceholder;
 
   // load saved key for this provider
@@ -164,6 +198,21 @@ function loadSettings() {
   setProvider(provider);
   const saved = localStorage.getItem(`pc_api_key_${provider}`);
   if (saved) testApiKey(saved, provider);
+
+  const gKey = localStorage.getItem('pc_google_key') || '';
+  const gCx  = localStorage.getItem('pc_google_cx')  || '';
+  const gKeyEl = document.getElementById('googleApiKeyInput');
+  const gCxEl  = document.getElementById('googleCxInput');
+  if (gKey) { gKeyEl.value = gKey; document.getElementById('googleKeyWrap').classList.add('has-value'); }
+  if (gCx)  { gCxEl.value  = gCx;  document.getElementById('googleCxWrap').classList.add('has-value'); }
+  updateSerpHint();
+}
+
+function updateSerpHint() {
+  const hint = document.getElementById('serpHint');
+  if (!hint) return;
+  const hasKey = !!(localStorage.getItem('pc_google_key') && localStorage.getItem('pc_google_cx'));
+  hint.textContent = hasKey ? 'عنوان محصول را وارد کنید و روی جستجو کلیک کنید.' : 'کلید Google را در تنظیمات وارد کنید.';
 }
 
 /* ─── API KEY TEST ─── */
@@ -211,6 +260,98 @@ async function testApiKey(key, provider) {
   } catch {
     setLamp('error');
   }
+}
+
+/* ─── SERP / INTENT ─── */
+const INTENT_KEYWORDS = {
+  informational: ['چیست','چگونه','آموزش','راهنما','چطور','معرفی','فواید','تاریخچه','what is','how to','guide','learn','tutorial','tips','explained','benefits','history'],
+  commercial:    ['بهترین','مقایسه','نقد','بررسی','ارزیابی','کدام','best','review','compare','vs','top','ranking','worth','alternatives','pros cons','difference'],
+  transactional: ['خرید','قیمت','ارزان','فروش','سفارش','تخفیف','خرید آنلاین','buy','price','cheap','order','discount','shop','deal','purchase','sale','for sale'],
+  navigational:  ['سایت رسمی','درباره ما','ورود','دانلود','official','login','download','signup','register','account','brand','website']
+};
+
+function detectIntent(results) {
+  const scores = { informational: 0, commercial: 0, transactional: 0, navigational: 0 };
+  results.forEach(r => {
+    const text = `${r.title} ${r.snippet}`.toLowerCase();
+    Object.entries(INTENT_KEYWORDS).forEach(([intent, kws]) => {
+      kws.forEach(kw => { if (text.includes(kw)) scores[intent]++; });
+    });
+  });
+  return Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
+}
+
+function setSerpLamp(state) {
+  const lamp = document.getElementById('serpLamp');
+  if (lamp) lamp.className = `api-lamp ${state}`;
+}
+
+async function searchGoogle(query) {
+  const apiKey = localStorage.getItem('pc_google_key') || '';
+  const cx     = localStorage.getItem('pc_google_cx')  || '';
+  if (!apiKey || !cx) {
+    showToast('⚠', 'کلید Google را در تنظیمات وارد کنید');
+    settingsPanel.classList.remove('hidden');
+    return;
+  }
+
+  setSerpLamp('testing');
+  const hint = document.getElementById('serpHint');
+  hint.textContent = 'در حال جستجو در گوگل...';
+
+  try {
+    const fetchPage = (start) =>
+      fetch(`https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${encodeURIComponent(query)}&num=10${start > 1 ? `&start=${start}` : ''}`)
+        .then(r => r.json());
+
+    const [p1, p2] = await Promise.all([fetchPage(1), fetchPage(11)]);
+
+    if (p1.error) throw new Error(p1.error.message || 'خطای Google API');
+
+    const items = [...(p1.items || []).slice(0, 10), ...(p2.items || []).slice(0, 5)];
+    serpData = items.map(item => ({
+      title:   item.title,
+      link:    item.link,
+      snippet: item.snippet || ''
+    }));
+
+    if (!serpData.length) throw new Error('نتیجه‌ای یافت نشد');
+
+    const intent = detectIntent(serpData);
+    selectedIntent = intent;
+    renderSerpUI(intent);
+    setSerpLamp('ok');
+    hint.textContent = `${serpData.length} نتیجه یافت شد`;
+
+  } catch (e) {
+    setSerpLamp('error');
+    hint.textContent = e.message || 'خطا در جستجو';
+    showToast('✕', e.message || 'خطا در جستجوی گوگل');
+  }
+}
+
+function renderSerpUI(intent) {
+  const intentSection = document.getElementById('intentSection');
+  intentSection.classList.remove('hidden');
+  document.getElementById('intentBadge').classList.remove('hidden');
+
+  document.querySelectorAll('#intentChips .md-chip').forEach(chip => {
+    chip.classList.toggle('active', chip.dataset.intent === intent);
+  });
+
+  const list = document.getElementById('serpList');
+  list.innerHTML = serpData.map((r, i) => `
+    <div class="flex items-start gap-2 py-1.5" style="border-bottom:1px solid var(--md-outline-var)">
+      <span class="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5"
+        style="background:color-mix(in srgb,var(--md-primary) 15%,transparent);color:var(--md-primary)">${i + 1}</span>
+      <div class="min-w-0 flex-1">
+        <p class="text-xs font-medium leading-snug" style="color:var(--md-on-surface)">${r.title}</p>
+        <p class="text-[11px] mt-0.5 leading-snug line-clamp-1" style="color:var(--md-outline)">${r.snippet}</p>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('serpResultsWrap').classList.remove('hidden');
 }
 
 /* ─── FIELD TYPES ─── */
@@ -475,7 +616,21 @@ ${langInstr}
     }
   });
 
-  prompt += `\n---\n\n## وظیفه:\nبرای هر یک از بخش‌های درخواستی (${selectedTypes}) یک عنوان مشخص بنویس و محتوای آن را با لحن ${toneMap[tone] || tone} بنویس. خروجی را با Markdown فرمت‌بندی کن.`;
+  if (serpData.length > 0 && selectedIntent) {
+    const intentMap = {
+      informational: 'اطلاعاتی — کاربر دنبال اطلاعات و آموزش است',
+      commercial:    'تجاری / مقایسه‌ای — کاربر در حال تحقیق قبل از خرید است',
+      transactional: 'تراکنشی — کاربر آماده خرید است',
+      navigational:  'ناوبری — کاربر دنبال برند یا سایت خاصی است'
+    };
+    prompt += `\n\n---\n\n## تحلیل SERP گوگل:\n`;
+    prompt += `**اینتنت اصلی کاربر:** ${intentMap[selectedIntent]}\n\n`;
+    prompt += `**${serpData.length} عنوان برتر گوگل برای این محصول:**\n`;
+    serpData.forEach((r, i) => { prompt += `${i + 1}. ${r.title}\n`; });
+    prompt += `\n**راهنما:** محتوا باید با اینتنت "${intentMap[selectedIntent]}" همسو باشد. از زاویه دید و کلیدواژه‌های عناوین برتر الهام بگیر اما محتوای یکتا و متمایز بنویس.`;
+  }
+
+  prompt += `\n\n---\n\n## وظیفه:\nبرای هر یک از بخش‌های درخواستی (${selectedTypes}) یک عنوان مشخص بنویس و محتوای آن را با لحن ${toneMap[tone] || tone} بنویس. خروجی را با Markdown فرمت‌بندی کن.`;
 
   return prompt;
 }
