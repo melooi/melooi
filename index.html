@@ -279,6 +279,10 @@
     .md-content blockquote { border-right: 3px solid var(--md-primary-cont); padding-right: .75rem; color: var(--md-on-surface-var); font-style: italic; margin: .6rem 0; font-size: .875rem; }
     .md-content hr { border-color: var(--md-outline-var); margin: .75rem 0; }
     .md-content a  { color: var(--md-primary); text-decoration: underline; }
+    .md-content table { width: 100%; border-collapse: collapse; margin: .75rem 0; font-size: .8125rem; }
+    .md-content th { background: var(--md-primary-cont); color: var(--md-on-primary-cont); padding: .5rem .75rem; text-align: right; font-weight: 600; border: 1px solid var(--md-outline-var); }
+    .md-content td { padding: .45rem .75rem; border: 1px solid var(--md-outline-var); color: var(--md-on-surface-var); }
+    .md-content tr:nth-child(even) td { background: color-mix(in srgb, var(--md-primary) 4%, var(--md-surface-cont)); }
 
     /* ── Scrollbar ── */
     ::-webkit-scrollbar       { width: 4px; }
@@ -460,6 +464,22 @@
               <button class="md-chip ripple-container" data-value="faq">
                 <svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                 سوالات متداول
+              </button>
+              <button class="md-chip ripple-container" data-value="advantages">
+                <svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                مزیت‌ها
+              </button>
+              <button class="md-chip ripple-container" data-value="disadvantages">
+                <svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                معایب
+              </button>
+              <button class="md-chip ripple-container" data-value="properties">
+                <svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                خاصیت‌ها
+              </button>
+              <button class="md-chip ripple-container" data-value="table">
+                <svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                جدول ویژگی
               </button>
             </div>
           </div>

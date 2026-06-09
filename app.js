@@ -375,7 +375,11 @@ function buildPrompt(inputs, tone, language, contentTypes) {
     social: 'پست شبکه اجتماعی (اینستاگرام/تلگرام)',
     seo: 'متا تایتل و متا دیسکریپشن (SEO)',
     tagline: 'تگ‌لاین و اسلوگان',
-    faq: 'سوالات متداول (FAQ)'
+    faq: 'سوالات متداول (FAQ)',
+    advantages: 'مزیت‌های محصول (لیست نقاط قوت)',
+    disadvantages: 'معایب و محدودیت‌های محصول (صادقانه)',
+    properties: 'خاصیت‌ها و کاربردهای محصول',
+    table: 'جدول ویژگی‌های فنی و مشخصات (Markdown table)'
   };
 
   const selectedTypes = contentTypes.map(t => typeMap[t] || t).join('، ');
@@ -614,6 +618,18 @@ function renderMarkdown(md) {
     return `<ol>${items}</ol>`;
   });
 
+  // Tables (must run before paragraph wrapping)
+  html = html.replace(/^(\|.+\|\n\|[-| :]+\|\n(?:\|.+\|\n?)*)/gm, (tableBlock) => {
+    const lines = tableBlock.trim().split('\n').filter(l => l.trim());
+    if (lines.length < 2) return tableBlock;
+    const parseRow = (line) => line.split('|').filter((_, i, a) => i > 0 && i < a.length - 1).map(c => c.trim());
+    const headers = parseRow(lines[0]);
+    const rows    = lines.slice(2).map(parseRow);
+    const ths = headers.map(h => `<th>${h}</th>`).join('');
+    const trs = rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
+    return `<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
+  });
+
   // Links
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
 
@@ -625,8 +641,8 @@ function renderMarkdown(md) {
   html = html.replace(/(?<!>)\n(?!<)/g, '<br>');
 
   // Clean up empty p tags and tags around block elements
-  html = html.replace(/<p>\s*(<(?:h[123]|ul|ol|pre|blockquote|hr)[^>]*>)/g, '$1');
-  html = html.replace(/(<\/(?:h[123]|ul|ol|pre|blockquote|hr)>)\s*<\/p>/g, '$1');
+  html = html.replace(/<p>\s*(<(?:h[123]|ul|ol|pre|blockquote|hr|table)[^>]*>)/g, '$1');
+  html = html.replace(/(<\/(?:h[123]|ul|ol|pre|blockquote|hr|table)>)\s*<\/p>/g, '$1');
   html = html.replace(/<p>\s*<\/p>/g, '');
 
   return html;
