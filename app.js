@@ -99,14 +99,25 @@ const PROVIDERS = {
     keyPlaceholder: 'sk-...',
     keyLabel: 'کلید API اوپن‌ای',
     models: [
+      { value: 'gpt-5.5',         label: 'GPT-5.5 ★' },
+      { value: 'gpt-5.2',         label: 'GPT-5.2' },
+      { value: 'gpt-5',           label: 'GPT-5' },
+      { value: 'gpt-5-mini',      label: 'GPT-5 Mini' },
+      { value: 'gpt-5.4-mini',    label: 'GPT-5.4 Mini' },
+      { value: 'gpt-4.1',         label: 'GPT-4.1' },
+      { value: 'gpt-4.1-mini',    label: 'GPT-4.1 Mini' },
+      { value: 'gpt-4.1-nano',    label: 'GPT-4.1 Nano' },
+      { value: 'gpt-4.5-preview', label: 'GPT-4.5 Preview' },
       { value: 'gpt-4o',          label: 'GPT-4o' },
       { value: 'gpt-4o-mini',     label: 'GPT-4o Mini' },
-      { value: 'gpt-4.5-preview', label: 'GPT-4.5 Preview' },
+      { value: 'o4-mini',         label: 'o4 Mini' },
+      { value: 'o3-pro',          label: 'o3 Pro' },
+      { value: 'o3',              label: 'o3' },
+      { value: 'o3-mini',         label: 'o3 Mini' },
       { value: 'o1',              label: 'o1' },
       { value: 'o1-mini',         label: 'o1 Mini' },
-      { value: 'o3-mini',         label: 'o3 Mini' },
     ],
-    defaultModel: 'gpt-4o'
+    defaultModel: 'gpt-5.5'
   }
 };
 
