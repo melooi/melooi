@@ -1,0 +1,1 @@
+/* see branch claude/product-content-generator-h6zipl for full source */
