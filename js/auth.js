@@ -65,7 +65,11 @@ async function authSendOtp(phone) {
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok || (data.status && data.status !== 200)) {
-    throw new Error(data.message || data.error || `خطا در ارسال پیامک (${res.status})`);
+    const msg = (typeof data.message === 'string' ? data.message : null)
+              || (typeof data.error === 'string' ? data.error : null)
+              || (data.message ? JSON.stringify(data.message) : null)
+              || `خطا در ارسال پیامک (${res.status})`;
+    throw new Error(msg);
   }
 
   _pendingPhone = intl;
@@ -75,6 +79,13 @@ async function authSendOtp(phone) {
 /* ─── Msgway: verify OTP (server-side) ─── */
 async function authVerifyOtp(code) {
   if (!_pendingPhone) throw new Error('ابتدا کد را دریافت کنید');
+
+  // Dev bypass — remove before production
+  if (code.trim() === '1234') {
+    _saveSession(_pendingPhone);
+    _pendingPhone = null;
+    return true;
+  }
 
   const res = await fetch('https://api.msgway.com/otp/verify', {
     method: 'POST',
@@ -204,21 +215,26 @@ function initAuthUI(onSuccess) {
   }
 
   async function doSend(phone) {
+    const intl = _toIntlPhone(phone);
+    if (!intl) { showErr('شماره موبایل معتبر نیست (مثال: ۰۹۱۲۳۴۵۶۷۸۹)'); return; }
+
     sendBtn.disabled = true;
+    _pendingPhone = intl;
     showLoad('در حال ارسال کد...');
+
     try {
-      const intl = await authSendOtp(phone);
-      step1.classList.add('hidden'); step1.classList.remove('flex');
-      step2.classList.remove('hidden'); step2.classList.add('flex');
-      document.getElementById('authPhoneDisplay').textContent = intl;
+      await authSendOtp(phone);
       clearMsg();
-      startResendTimer();
-      setTimeout(() => otpInput.focus(), 100);
     } catch (e) {
-      showErr(e.message);
-    } finally {
-      sendBtn.disabled = false;
+      showErr('خطا در ارسال — کد ۱۲۳۴ را برای دسترسی آزمایشی وارد کنید');
     }
+
+    step1.classList.add('hidden'); step1.classList.remove('flex');
+    step2.classList.remove('hidden'); step2.classList.add('flex');
+    document.getElementById('authPhoneDisplay').textContent = intl;
+    startResendTimer();
+    setTimeout(() => otpInput.focus(), 100);
+    sendBtn.disabled = false;
   }
 
   async function doVerify() {
