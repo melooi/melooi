@@ -18,15 +18,15 @@ function setProvider(p) {
   apiKeyInput.value = savedKey;
   document.getElementById('apiFieldWrap').classList.toggle('has-value', savedKey.length > 0);
 
+  const existingKey = localStorage.getItem(`pc_api_key_${p}`);
+  if (existingKey) testApiKey(existingKey, p);
+  else setLamp('idle');
+
   modelSelect.innerHTML = def.models.map(m =>
     `<option value="${m.value}">${m.label}</option>`
   ).join('');
   const savedModel = localStorage.getItem(`pc_model_${p}`) || def.defaultModel;
   modelSelect.value = savedModel;
-
-  const existingKey = localStorage.getItem(`pc_api_key_${p}`);
-  if (existingKey) testApiKey(existingKey, p);
-  else setLamp('idle');
 }
 
 /* ─── API key lamp ─── */

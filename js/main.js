@@ -1,4 +1,4 @@
-/* ─── App entry point ─── */
+/* ─── App entry point (called after successful auth) ─── */
 function init() {
   loadSettings();
   addField('text');
@@ -72,4 +72,4 @@ function init() {
   });
 }
 
-init();
+initAuthUI(init);
